@@ -11,9 +11,9 @@ Meant to go to the Original Repo?
 
 [Original Repo](https://github.com/Myke247/MGTools)
 
-## **Version 2.5.0-M** | All-in-one assistant for Magic Garden with a beautiful unified UI
+## **Version 2.6.0-M** | All-in-one assistant for Magic Garden with a beautiful unified UI
 
-![MGTools](https://img.shields.io/badge/version-2.5.0_M-blue) ![Status](https://img.shields.io/badge/status-maintenance-yellow?style=flat&label=status)
+![MGTools](https://img.shields.io/badge/version-2.6.0_M-blue) ![Status](https://img.shields.io/badge/status-maintenance-yellow?style=flat&label=status)
 
 
 ---
@@ -39,7 +39,7 @@ MGTools is a powerful userscript that enhances your Magic Garden experience with
 ## ✨ Key Features
 
 ### 🐾 Pet Management
-- **NEW: Instant Feed Buttons** - Click "Feed" next to each pet to instantly feed them compatible crops
+- **Instant Feed Buttons** - Click "Feed" next to each pet to instantly feed them compatible crops
 - Save unlimited pet loadout presets
 - Quick-swap with custom hotkeys
 - Real-time hunger timers with color-coded alerts
@@ -104,7 +104,7 @@ MGTools is a powerful userscript that enhances your Magic Garden experience with
 
 ### 🎨 Theme System
 - 15+ preset themes (Gaming, Minimal, Vibrant, Dark, Luxury, Steel, Chrome, Titanium, and more)
-- **NEW: Premium Texture System** - 25 professional texture overlays with real-time controls
+- Premium Texture System - 25 professional texture overlays with real-time controls
 - Texture intensity slider (0-100%), scale control, 4 blend modes, animation toggle
 - Full custom theme editor
 - Adjustable opacity for main HUD and popups
@@ -151,7 +151,7 @@ MGTools is a powerful userscript that enhances your Magic Garden experience with
 
 ---
 
-### Method 2: Manual Install (Advanced)
+### Method 2: Manual Install (Advanced/Annoying)
 
 If you want to install from the repository file directly:
 
@@ -230,7 +230,7 @@ The **Unified Dock** appears at the bottom (horizontal) or left side (vertical) 
 - Respects your MGTools favorited crops
 
 **Open Shop**:
-- Press **Alt+B** to toggle seed/egg shop
+- Press **Alt+B** to open a quick seed/egg shop
 
 **Lock Crops**:
 1. Go to Protect tab
@@ -246,14 +246,6 @@ The **Unified Dock** appears at the bottom (horizontal) or left side (vertical) 
 1. Click Timers tab
 2. Click "Start Turtle Timer" when you plant
 3. Countdown appears on Timers dock badge
-
-**Manage Custom Rooms** (NEW!):
-1. Click Rooms tab (🏠)
-2. **Search for any room**: Type room code in search box at top
-3. **Add custom rooms**: Enter room code at bottom and click "Add"
-4. **Reorder rooms**: Drag the ⋮⋮ handle to rearrange
-5. **Delete rooms**: Click ❌ to remove from your list
-6. All changes save automatically!
 
 ---
 

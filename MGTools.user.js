@@ -21,6 +21,7 @@
 // @connect       firebaseio.com
 // @connect       googleapis.com
 // @connect       google.com
+// @connect       mg-api.ariedam.fr
 // @require       https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js
 // @require       https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js
 // @require       https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js
@@ -239,6 +240,63 @@ class Plant {
        `;
     }
   }
+}
+
+async function fetchPlantsFromMGAPI() {
+  const url = "https://mg-api.ariedam.fr/data/plants";
+  const plantsArray = [];
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+
+    const plants = await response.json();
+
+    for (const [id, plant] of Object.entries(plants)) {
+      let rarityNum = 0;
+      switch (plant.seed.rarity) {
+        case "Uncommon":
+          rarityNum = 1;
+          break;
+        case "Rare":
+          rarityNum = 2;
+          break;
+        case "Legendary":
+          rarityNum = 3;
+          break;
+        case "Mythic":
+          rarityNum = 4;
+          break;
+        case "Divine":
+          rarityNum = 5;
+          break;
+        case "Celestial":
+          rarityNum = 6;
+          break;
+
+        default:
+          break;
+      }
+      const newPlant = new Plant(
+        plant.crop.name,
+        id,
+        plant.crop.sprite,
+        rarityNum,
+        plant.seed.coinPrice,
+        plant.seed.purchasable,
+        "⚠️",
+        plant.crop.baseSellPrice,
+      );
+      /*console.log(
+        `"name": "${plant.crop.name}", "id": "${id}", "shopImage": "${plant.crop.sprite}", "rarity": ${rarityNum}, "shopPrice": ${plant.seed.coinPrice}, "inShop": ${plant.seed.purchasable}, "htmlEmoji": "⚠️", "plantValue": ${plant.crop.baseSellPrice}`,
+      );*/
+      plantsArray.push(newPlant);
+    }
+  } catch (error) {
+    console.error(error.message);
+  }
+  return plantsArray;
 }
 
 // === DIAGNOSTIC LOGGING (MUST EXECUTE IF SCRIPT LOADS) ===
@@ -2540,7 +2598,7 @@ console.log(
     "✅ [EXECUTION] Initialization block completed without throwing",
   );
 
-  function startMGAInitialization() {
+  async function startMGAInitialization() {
     productionLog(
       "🔍🔍🔍🔍🔍 [EXECUTION] ENTERED startMGAInitialization() function!",
     );
@@ -3745,448 +3803,7 @@ console.log(
 
       // --- Database (Remember to include delphinium!!!!!!) ---
 
-      plantsDatabase: [
-        new Plant(
-          "Carrot",
-          "Carrot",
-          "https://media.magicgarden.wiki/Carrot.png",
-          NUM_COM,
-          10,
-          true,
-          "🥕",
-          20,
-        ),
-        new Plant(
-          "Cabbage",
-          "Cabbage",
-          "https://media.magicgarden.wiki/Cabbage.png",
-          NUM_COM,
-          30,
-          true,
-          "🥬",
-          42,
-        ),
-        new Plant(
-          "Strawberry",
-          "Strawberry",
-          "https://media.magicgarden.wiki/Strawberry.png",
-          NUM_COM,
-          50,
-          true,
-          "🍓",
-          14,
-        ),
-        new Plant(
-          "Aloe",
-          "Aloe",
-          "https://media.magicgarden.wiki/Aloe.png",
-          NUM_COM,
-          135,
-          true,
-          "🌿",
-          310,
-        ),
-        new Plant(
-          "Beet",
-          "Beet",
-          "https://media.magicgarden.wiki/Beet.png",
-          NUM_COM,
-          210,
-          true,
-          "🪘🫚",
-          350,
-        ),
-        new Plant(
-          "Rose",
-          "Rose",
-          "https://media.magicgarden.wiki/Rose.png",
-          NUM_UNCOM,
-          229,
-          true,
-          "🌹",
-          300,
-        ),
-        new Plant(
-          "Delphinium",
-          "Delphinium",
-          "https://media.magicgarden.wiki/Delphinium.png",
-          NUM_UNCOM,
-          0,
-          false,
-          "🪻",
-          530,
-        ),
-        new Plant(
-          "FavaBean",
-          "FavaBean",
-          "https://media.magicgarden.wiki/Fava_Bean_Pod.png",
-          NUM_UNCOM,
-          250,
-          true,
-          "🫛",
-          30,
-        ),
-        new Plant(
-          "Blueberry",
-          "Blueberry",
-          "https://media.magicgarden.wiki/Blueberry.png",
-          NUM_UNCOM,
-          400,
-          true,
-          "🫐",
-          23,
-        ),
-        new Plant(
-          "Apple",
-          "Apple",
-          "https://media.magicgarden.wiki/Apple.png",
-          NUM_UNCOM,
-          500,
-          true,
-          "🍎",
-          73,
-        ),
-        new Plant(
-          "Tulip",
-          "OrangeTulip",
-          "https://media.magicgarden.wiki/Tulip.png",
-          NUM_UNCOM,
-          600,
-          true,
-          "🌷",
-          767,
-        ),
-        new Plant(
-          "Tomato",
-          "Tomato",
-          "https://media.magicgarden.wiki/Tomato.png",
-          NUM_UNCOM,
-          800,
-          true,
-          "🍅",
-          27,
-        ),
-        new Plant(
-          "Daffodil",
-          "Daffodil",
-          "https://media.magicgarden.wiki/Daffodil.png",
-          NUM_RARE,
-          1000,
-          true,
-          "🌻",
-          1090,
-        ),
-        new Plant(
-          "Corn",
-          "Corn",
-          "https://media.magicgarden.wiki/Corn.png",
-          NUM_RARE,
-          1300,
-          true,
-          "🌽",
-          36,
-        ),
-        new Plant(
-          "Watermelon",
-          "Watermelon",
-          "https://media.magicgarden.wiki/Watermelon.png",
-          NUM_RARE,
-          2500,
-          true,
-          "🍉",
-          2708,
-        ),
-        new Plant(
-          "Pumpkin",
-          "Pumpkin",
-          "https://media.magicgarden.wiki/Pumpkin.png",
-          NUM_RARE,
-          3000,
-          true,
-          "🎃",
-          3700,
-        ),
-        new Plant(
-          "Echeveria",
-          "Echeveria",
-          "https://media.magicgarden.wiki/Echeveria.png",
-          NUM_RARE,
-          4200,
-          true,
-          "🌵",
-          4600,
-        ),
-        new Plant(
-          "Pear",
-          "Pear",
-          "https://media.magicgarden.wiki/Pear.png",
-          NUM_RARE,
-          6000,
-          true,
-          "🍐",
-          250,
-        ),
-        new Plant(
-          "Gentian",
-          "Gentian",
-          "https://media.magicgarden.wiki/Gentian.png",
-          NUM_RARE,
-          9000,
-          true,
-          "🪻🌺",
-          10000,
-        ),
-        new Plant(
-          "Coconut",
-          "Coconut",
-          "https://media.magicgarden.wiki/Coconut.png",
-          NUM_LEG,
-          6000,
-          true,
-          "🥥",
-          302,
-        ),
-        new Plant(
-          "Banana",
-          "Banana",
-          "https://media.magicgarden.wiki/Banana.png",
-          NUM_LEG,
-          7500,
-          true,
-          "🍌",
-          1750,
-        ),
-        new Plant(
-          "PineTree",
-          "PineTree",
-          "https://media.magicgarden.wiki/Pine_Tree.png",
-          NUM_LEG,
-          12000,
-          false,
-          "🌲",
-          15000,
-        ),
-        new Plant(
-          "Lily",
-          "Lily",
-          "https://media.magicgarden.wiki/Lily.png",
-          NUM_LEG,
-          20000,
-          true,
-          "💮",
-          20123,
-        ),
-        new Plant(
-          "Camellia",
-          "Camellia",
-          "https://media.magicgarden.wiki/Camellia.png",
-          NUM_LEG,
-          55000,
-          true,
-          "🌼",
-          4875,
-        ),
-        new Plant(
-          "Squash",
-          "Squash",
-          "https://media.magicgarden.wiki/Squash.png",
-          NUM_LEG,
-          0,
-          false,
-          "🎄",
-          3500,
-        ),
-        new Plant(
-          "Peach",
-          "Peach",
-          "https://media.magicgarden.wiki/Peach.png",
-          NUM_LEG,
-          85000,
-          true,
-          "🍑",
-          9000,
-        ),
-        new Plant(
-          "BurrosTail",
-          "BurrosTail",
-          "https://media.magicgarden.wiki/Burro's_Tail.png",
-          NUM_LEG,
-          93000,
-          true,
-          "🪴",
-          6000,
-        ),
-        new Plant(
-          "Mushroom",
-          "Mushroom",
-          "https://media.magicgarden.wiki/Mushroom.png",
-          NUM_MYTH,
-          150000,
-          true,
-          "🍄",
-          160000,
-        ),
-        new Plant(
-          "Cactus",
-          "Cactus",
-          "https://media.magicgarden.wiki/Cactus.png",
-          NUM_MYTH,
-          250000,
-          true,
-          "🌵",
-          261000,
-        ),
-        new Plant(
-          "Bamboo",
-          "Bamboo",
-          "https://media.magicgarden.wiki/Bamboo.png",
-          NUM_MYTH,
-          400000,
-          true,
-          "🎍",
-          500000,
-        ),
-        new Plant(
-          "VioletCort",
-          "VioletCort",
-          "https://media.magicgarden.wiki/Violet_Cort.png",
-          NUM_MYTH,
-          520000,
-          true,
-          "🪻🍄",
-          600000,
-        ),
-        new Plant(
-          "Poinsettia",
-          "Poinsettia",
-          "https://media.magicgarden.wiki/Poinsettia.png",
-          NUM_MYTH,
-          500000,
-          true,
-          "🪷",
-          30000,
-        ),
-        new Plant(
-          "Chrysanthemum",
-          "Chrysanthemum",
-          "https://media.magicgarden.wiki/Chrysanthemum.png",
-          NUM_MYTH,
-          650000,
-          true,
-          "🌸",
-          18000,
-        ),
-        new Plant(
-          "Grape",
-          "Grape",
-          "https://media.magicgarden.wiki/Grape.png",
-          NUM_MYTH,
-          850000,
-          true,
-          "🍇",
-          12500,
-        ),
-        new Plant(
-          "Pepper",
-          "Pepper",
-          "https://media.magicgarden.wiki/Pepper.png",
-          NUM_DIV,
-          1000000,
-          true,
-          "🌶️",
-          7220,
-        ),
-        new Plant(
-          "Lemon",
-          "Lemon",
-          "https://media.magicgarden.wiki/Lemon.png",
-          NUM_DIV,
-          2000000,
-          true,
-          "🍋",
-          10000,
-        ),
-        new Plant(
-          "PassionFruit",
-          "PassionFruit",
-          "https://media.magicgarden.wiki/Passion_Fruit.png",
-          NUM_DIV,
-          2750000,
-          true,
-          "🥭",
-          24500,
-        ),
-        new Plant(
-          "DragonFruit",
-          "DragonFruit",
-          "https://media.magicgarden.wiki/Dragon_Fruit.png",
-          NUM_DIV,
-          5000000,
-          true,
-          "🐉",
-          24500,
-        ),
-        new Plant(
-          "Cacao",
-          "Cacao",
-          "https://media.magicgarden.wiki/Cacao_Fruit.png",
-          NUM_DIV,
-          10000000,
-          true,
-          "🫘",
-          70000,
-        ),
-        new Plant(
-          "Lychee",
-          "Lychee",
-          "https://media.magicgarden.wiki/Lychee.png",
-          NUM_DIV,
-          25000000,
-          true,
-          "🍒",
-          50000,
-        ),
-        new Plant(
-          "Sunflower",
-          "Sunflower",
-          "https://media.magicgarden.wiki/Sunflower.png",
-          NUM_DIV,
-          100000000,
-          true,
-          "🌻",
-          750000,
-        ),
-        new Plant(
-          "Starweaver",
-          "Starweaver",
-          "https://media.magicgarden.wiki/Starweaver_Fruit.png",
-          NUM_CEL,
-          1000000000,
-          true,
-          "⭐",
-          10000000,
-        ),
-        new Plant(
-          "Dawnbinder",
-          "DawnCelestial",
-          "https://media.magicgarden.wiki/Dawnbinder_Bulb.png",
-          NUM_CEL,
-          10000000000,
-          true,
-          "🌙",
-          11000000,
-        ),
-        new Plant(
-          "Moonbinder",
-          "MoonCelestial",
-          "https://media.magicgarden.wiki/Moonbinder_Bulb.png",
-          NUM_CEL,
-          50000000000,
-          true,
-          "🌅",
-          11000000,
-        ),
-      ],
+      plantsDatabase: await fetchPlantsFromMGAPI(),
     };
 
     // Export UnifiedState for debugging and external access
@@ -14317,7 +13934,9 @@ console.log(
       ];
 
       // 2. The Logic to fill the seeds list
+      console.warn("AAAAAA");
       UnifiedState.plantsDatabase.forEach((plant) => {
+        console.warn(plant.rarity);
         // Use plant.rarity as the index for the rarityList
         const targetRarity = seedGroups[plant.rarity];
 
@@ -14523,10 +14142,13 @@ console.log(
 
     UnifiedState.plantsDatabase.forEach((plant) => {
       // Use plant.rarity as the index for the rarityList
+      console.warn("Thingo" + plant);
       if (plant.inShop) {
         SHOP_PRICES[plant.id] = plant.shopPrice;
       }
     });
+
+    console.warn(SHOP_PRICES);
 
     // Format price with k/m/b notation and return color
     function formatShopPrice(price) {
@@ -31621,6 +31243,7 @@ console.log(
     }
 
     // Helper function to create/update spans (ref.user.js pattern)
+    // Helper function to create/update spans (ref.user.js pattern)
     function ensureSpanAtEnd(
       inner,
       text,
@@ -31628,71 +31251,93 @@ console.log(
       color,
       showCoinIcon = false,
     ) {
-      if (typeof MGSpriteCatalog !== "undefined") return;
+      // 1. Guard check
+      if (typeof MGSpriteCatalog !== "undefined" || !inner) return;
 
       const COIN_URL =
         "https://cdn.discordapp.com/emojis/1425389207525920808.webp?size=96";
       const ICON_CLASS = markerClass + "-icon";
       const LABEL_CLASS = markerClass + "-label";
 
-      // Find or create the marker span
-      const spans = Array.from(
-        inner.querySelectorAll(`:scope > span.${markerClass}`),
-      );
-      let span = spans[0] || null;
+      /** * 2. FIND OR CREATE THE SPAN
+       * To prevent the "double span" issue seen in the McFlex containers:
+       * We check both the 'inner' container AND its parent to see if the marker already exists.
+       */
+      let span = inner.querySelector(`.${markerClass}`);
 
-      // Remove duplicates
-      for (let i = 1; i < spans.length; i++) {
-        spans[i].remove();
+      // If not found in inner, check siblings/parent to catch misaligned injections
+      if (!span && inner.parentElement) {
+        span = inner.parentElement.querySelector(`:scope > .${markerClass}`);
+      }
+
+      // Handle cleanup of ALL duplicates in the immediate vicinity
+      const context = inner.parentElement || inner;
+      const allSpans = context.querySelectorAll(`.${markerClass}`);
+      if (allSpans.length > 1) {
+        for (let i = 1; i < allSpans.length; i++) {
+          allSpans[i].remove();
+        }
       }
 
       if (!span) {
         span = document.createElement("span");
         span.className = markerClass;
+        // Append immediately
+        inner.appendChild(span);
       }
 
-      // Style the span
-      span.style.display = "block";
-      span.style.marginTop = "6px";
-      span.style.fontWeight = "700";
-      span.style.color = color;
-      span.style.fontSize = "14px";
+      // 3. STYLE THE MAIN SPAN
+      Object.assign(span.style, {
+        display: "block",
+        marginTop: "6px",
+        fontWeight: "700",
+        color: color,
+        fontSize: "14px",
+      });
 
-      // Add coin icon if needed
+      // 4. HANDLE COIN ICON
       if (showCoinIcon) {
-        let icon = span.querySelector(`:scope > img.${ICON_CLASS}`);
+        let icon = span.querySelector(`img.${ICON_CLASS}`);
         if (!icon) {
           icon = document.createElement("img");
           icon.className = ICON_CLASS;
           icon.alt = "";
           icon.setAttribute("aria-hidden", "true");
-          icon.style.width = "14px";
-          icon.style.height = "14px";
-          icon.style.display = "inline-block";
-          icon.style.verticalAlign = "middle";
-          icon.style.marginRight = "4px";
-          icon.style.userSelect = "none";
-          icon.style.pointerEvents = "none";
-          span.insertBefore(icon, span.firstChild);
+          Object.assign(icon.style, {
+            width: "14px",
+            height: "14px",
+            display: "inline-block",
+            verticalAlign: "middle",
+            marginRight: "4px",
+            userSelect: "none",
+            pointerEvents: "none",
+          });
+          span.prepend(icon);
         }
         if (icon.src !== COIN_URL) {
           icon.src = COIN_URL;
         }
+      } else {
+        const existingIcon = span.querySelector(`img.${ICON_CLASS}`);
+        if (existingIcon) existingIcon.remove();
       }
 
-      // Add or update label
-      let label = span.querySelector(`:scope > span.${LABEL_CLASS}`);
+      // 5. HANDLE LABEL TEXT
+      let label = span.querySelector(`span.${LABEL_CLASS}`);
       if (!label) {
         label = document.createElement("span");
         label.className = LABEL_CLASS;
         label.style.display = "inline";
         span.appendChild(label);
       }
+
       if (label.textContent !== text) {
         label.textContent = text;
       }
 
-      // Append to parent if not already there
+      // 6. ENFORCE POSITIONING
+      // Ensure it is inside the 'inner' container and at the end.
+      // This pulls it back inside if it somehow became a sibling.
       if (inner.lastElementChild !== span) {
         inner.appendChild(span);
       }
@@ -35471,377 +35116,209 @@ console.log(
           };
 
           // Re-entry guard to prevent infinite loop
-          let isInjecting = false;
+          /**
+           * MGTools Feed Overlay Module
+           * This script creates a fixed-screen overlay that uses a hidden copy of the
+           * game's sidebar HTML to perfectly align feed buttons with the game's UI scaling.
+           */
 
-          // Inject instant feed buttons next to pet avatars
+          let isInjecting = false;
+          const FEED_OVERLAY_ID = "mgtools-feed-overlay-container";
+
+          /**
+           * Creates the ghost UI structure and injects the feed buttons into it.
+           * This ensures they scale and position exactly like the original game UI.
+           */
           const injectInstantFeedButtons = function () {
-            // Prevent re-entry while already injecting (avoids MutationObserver infinite loop)
-            if (isInjecting) {
-              return;
-            }
+            if (isInjecting) return;
 
             try {
               isInjecting = true;
-              productionLog(
-                "[MGTools Feed] 🔍 Starting container-based injection...",
-              );
 
-              // Check which buttons already exist by data-pet-index
-              const existingButtons = targetDocument.querySelectorAll(
-                ".mgtools-instant-feed-btn",
-              );
-              const existingIndices = new Set();
-              existingButtons.forEach((btn) => {
-                const index = btn.getAttribute("data-pet-index");
-                if (index !== null) {
-                  existingIndices.add(parseInt(index, 10));
-                }
-              });
+              let overlay = targetDocument.getElementById(FEED_OVERLAY_ID);
 
-              if (existingIndices.size === 3) {
-                isInjecting = false;
-                return;
-              }
+              if (!overlay) {
+                productionLog(
+                  "[MGTools Feed] 🛠️ Creating scaling ghost overlay...",
+                );
+                overlay = targetDocument.createElement("div");
+                overlay.id = FEED_OVERLAY_ID;
 
-              const missingIndices = [0, 1, 2].filter(
-                (i) => !existingIndices.has(i),
-              );
+                // Container styles: Covers screen, allows clicks through, but houses our scaling sidebar
+                Object.assign(overlay.style, {
+                  position: "fixed",
+                  top: "0",
+                  left: "0",
+                  width: "100vw",
+                  height: "100vh",
+                  pointerEvents: "none",
+                  zIndex: "100",
+                  // CSS Variables to match the game's scaling logic
+                  "--mc-bg-black": "rgba(0, 0, 0, 0.65)",
+                  "--mc-border-grey": "#A3A3A3",
+                  "--mc-green-magic": "#5EAC46",
+                  "--mc-text-white": "#F5F5F5",
+                  "--mc-slot-size": "74px",
+                  "--mc-gap": "4px",
+                  "--system-header-height": "60px",
+                });
 
-              // Find ALL canvas elements
-              const allCanvases = Array.from(
-                targetDocument.querySelectorAll("canvas"),
-              );
-
-              // Filter to pet avatar canvases (left 15% of screen, reasonable size)
-              const viewportWidth = targetWindow.innerWidth;
-              const viewportHeight = targetWindow.innerHeight;
-              const leftThreshold = viewportWidth * 0.15;
-              const minTop = 80;
-              const maxTop = viewportHeight - 100;
-
-              const petAvatarCanvases = allCanvases
-                .filter((canvas) => {
-                  const rect = canvas.getBoundingClientRect();
-                  const isOnScreen =
-                    rect.left >= 0 && rect.left < leftThreshold;
-                  const hasReasonableSize =
-                    rect.width > 20 &&
-                    rect.width < 200 &&
-                    rect.height > 20 &&
-                    rect.height < 200;
-                  const isInValidVerticalRange =
-                    rect.top > minTop && rect.top < maxTop;
-
-                  if (
-                    isOnScreen &&
-                    hasReasonableSize &&
-                    isInValidVerticalRange
-                  ) {
-                  }
-
-                  return (
-                    isOnScreen && hasReasonableSize && isInValidVerticalRange
-                  );
-                })
-                .sort(
-                  (a, b) =>
-                    a.getBoundingClientRect().top -
-                    b.getBoundingClientRect().top,
-                )
-                .slice(0, 3);
-
-              if (petAvatarCanvases.length === 0) {
-                console.warn("[MGTools Feed] ⚠️ No pet avatar canvases found!");
-                isInjecting = false;
-                return;
-              }
-
-              // For EACH canvas, find its pet panel container and inject button
-              petAvatarCanvases.forEach((canvas, index) => {
-                try {
-                  // Skip if button already exists
-                  if (existingIndices.has(index)) {
-                    return;
-                  }
-
-                  // Find the SMALLEST container with STR/INT text (the pet panel)
-                  let container = canvas.parentElement;
-                  let levelsUp = 0;
-                  const maxLevels = 10;
-                  const candidates = [];
-
-                  while (
-                    container &&
-                    levelsUp < maxLevels &&
-                    container !== targetDocument.body
-                  ) {
-                    const hasStats = /STR\s+\d+|INT\s+\d+/.test(
-                      container.textContent,
-                    );
-                    const rect = container.getBoundingClientRect();
-
-                    if (hasStats && rect.width < 200 && rect.height < 200) {
-                      // Valid small container with stats
-                      candidates.push({
-                        element: container,
-                        area: rect.width * rect.height,
-                        width: rect.width,
-                        height: rect.height,
-                      });
+                // Inject the ghost sidebar structure using the exact HTML pattern provided.
+                // The .ghost-sidebar handles the vertical centering logic.
+                overlay.innerHTML = `
+                  <style>
+                    #${FEED_OVERLAY_ID} .ghost-sidebar {
+                      position: absolute;
+                      left: 4px;
+                      /* Vertically centered between header and inventory */
+                      top: calc(var(--system-header-height) + (100vh - var(--system-header-height) - 100px) / 2);
+                      transform: translateY(-40%);
+                      display: flex;
+                      flex-direction: column;
+                      gap: 4px;
+                      visibility: hidden; /* Hide the entire ghost structure */
                     }
 
-                    container = container.parentElement;
-                    levelsUp++;
-                  }
+                    /* Individual Slot Styles (from the provided example) */
+                    #${FEED_OVERLAY_ID} .mc-pet-slot-button {
+                      background-color: var(--mc-bg-black);
+                      width: 74px;
+                      height: 74px;
+                      border-radius: 10px;
+                      border: 2px solid transparent;
+                      display: flex;
+                      flex-direction: column;
+                      color: var(--mc-text-white);
+                      box-sizing: border-box;
+                      position: relative; /* Anchor for our absolute button */
+                    }
 
-                  if (candidates.length === 0) {
-                    console.warn(
-                      `[MGTools Feed] ⚠️ No valid container found for pet ${index + 1}`,
-                    );
-                    return;
-                  }
+                    #${FEED_OVERLAY_ID} .mc-pet-strength {
+                      font-size: 10px;
+                      font-weight: bold;
+                      text-align: center;
+                      margin-top: 2px;
+                    }
 
-                  // Use SMALLEST container (most direct parent)
-                  candidates.sort((a, b) => a.area - b.area);
-                  const targetContainer = candidates[0].element;
+                    #${FEED_OVERLAY_ID} .mc-pet-content {
+                      display: flex;
+                      justify-content: center;
+                      align-items: center;
+                      flex-grow: 1;
+                    }
 
-                  productionLog(`[MGTools Feed] 📐 Selected container:`, {
-                    width: candidates[0].width.toFixed(1),
-                    height: candidates[0].height.toFixed(1),
-                    tagName: targetContainer.tagName,
-                  });
+                    #${FEED_OVERLAY_ID} .mc-pet-sprite {
+                      width: 30px;
+                      height: 30px;
+                      background: rgba(255,255,255,0.1);
+                      border-radius: 50%;
+                    }
 
-                  // Check if button already exists in this container
-                  if (
-                    targetContainer.querySelector(".mgtools-instant-feed-btn")
-                  ) {
-                    return;
-                  }
+                    #${FEED_OVERLAY_ID} .mc-hunger-bar-container {
+                      padding: 0 10px;
+                      height: 5px;
+                      margin-bottom: 4px;
+                    }
 
-                  // Set container to position: relative
-                  const currentPosition =
-                    targetWindow.getComputedStyle(targetContainer).position;
-                  if (currentPosition === "static") {
-                    targetContainer.style.position = "relative";
-                  }
+                    #${FEED_OVERLAY_ID} .mc-hunger-bar {
+                      width: 100%;
+                      height: 100%;
+                      border: 1px solid var(--mc-border-grey);
+                      border-radius: 3px;
+                    }
 
-                  // Create and append button
-                  const btn = createInstantFeedButton(index);
-                  targetContainer.appendChild(btn);
+                    #${FEED_OVERLAY_ID} .mc-hunger-bar-fill {
+                      height: 100%;
+                      background-color: var(--mc-green-magic);
+                      width: 70%;
+                    }
 
-                  productionLog(
-                    `[MGTools Feed] Injected feed button ${index + 1}`,
-                  );
-                } catch (err) {
-                  console.error(
-                    `[MGTools Feed] Error processing canvas ${index + 1}:`,
-                    err,
-                  );
+                    /* The actual interactive Feed Button */
+                    #${FEED_OVERLAY_ID} .mgtools-instant-feed-btn {
+                      visibility: visible; /* Override parent hidden state */
+                      pointer-events: auto; /* Enable clicks */
+                      position: absolute;
+                    }
+                  </style>
+                  <div class="ghost-sidebar">
+                    ${[0, 1, 2]
+                      .map(
+                        (i) => `
+                      <div class="mc-pet-slot-button" data-ghost-index="${i}">
+                        <div class="mc-pet-strength">STR 100</div>
+                        <div class="mc-pet-content"><div class="mc-pet-sprite"></div></div>
+                        <div class="mc-hunger-bar-container">
+                          <div class="mc-hunger-bar">
+                            <div class="mc-hunger-bar-fill"></div>
+                          </div>
+                        </div>
+                      </div>
+                    `,
+                      )
+                      .join("")}
+                  </div>
+                `;
+
+                targetDocument.body.appendChild(overlay);
+              }
+
+              // Ensure buttons are inside our ghost slots
+              const ghostSlots = overlay.querySelectorAll(
+                ".mc-pet-slot-button",
+              );
+              ghostSlots.forEach((slot, i) => {
+                const btnId = `mgtools-btn-pet-${i}`;
+                if (!targetDocument.getElementById(btnId)) {
+                  const btn = createInstantFeedButton(i);
+                  btn.id = btnId;
+                  slot.appendChild(btn);
                 }
               });
 
-              // Reset flag after successful injection
               isInjecting = false;
             } catch (error) {
               console.error(
                 "[MGTools Feed] Error in injectInstantFeedButtons:",
                 error,
               );
-              isInjecting = false; // Reset flag even on error
+              isInjecting = false;
             }
           };
 
-          // Initialize instant feed buttons with polling (reliable for CSS visibility changes)
+          /**
+           * Initialization with polling to ensure the overlay stays active.
+           */
           const initializeInstantFeedButtons = function () {
             productionLog(
-              "[MGTools Feed] 🚀 Initializing instant feed buttons with polling interval...",
+              "[MGTools Feed] 🚀 Initializing scaling ghost feed buttons...",
             );
 
-            // Try to capture jotaiStore early (but don't block if unavailable)
             if (!jotaiStore) {
               jotaiStore = captureJotaiStore();
-              if (jotaiStore) {
-                productionLog(
-                  "[MGTools Feed] ✅ Jotai store captured at initialization",
-                );
-              } else {
-                productionLog(
-                  "[MGTools Feed] ⏳ Jotai store not ready yet - will use fallback data",
-                );
-              }
             }
 
-            // Helper to find all visible pet containers
-            function findVisiblePetContainers() {
-              const allCanvases = Array.from(
-                targetDocument.querySelectorAll("canvas"),
-              );
-              const viewportWidth = targetWindow.innerWidth;
-              const viewportHeight = targetWindow.innerHeight;
-              const leftThreshold = viewportWidth * 0.15;
-              const minTop = 80;
-              const maxTop = viewportHeight - 100;
+            // Initial render
+            injectInstantFeedButtons();
 
-              // Filter to pet avatar canvases (left side, reasonable size, visible)
-              const petAvatarCanvases = allCanvases
-                .filter((canvas) => {
-                  const rect = canvas.getBoundingClientRect();
-
-                  // Check if visible (not hidden with CSS)
-                  const computedStyle = targetWindow.getComputedStyle(canvas);
-                  const isVisible =
-                    computedStyle.display !== "none" &&
-                    computedStyle.visibility !== "hidden" &&
-                    rect.width > 0 &&
-                    rect.height > 0;
-
-                  if (!isVisible) return false;
-
-                  const isOnScreen =
-                    rect.left >= 0 && rect.left < leftThreshold;
-                  const hasReasonableSize =
-                    rect.width > 20 &&
-                    rect.width < 200 &&
-                    rect.height > 20 &&
-                    rect.height < 200;
-                  const isInValidVerticalRange =
-                    rect.top > minTop && rect.top < maxTop;
-
-                  return (
-                    isOnScreen && hasReasonableSize && isInValidVerticalRange
-                  );
-                })
-                .sort(
-                  (a, b) =>
-                    a.getBoundingClientRect().top -
-                    b.getBoundingClientRect().top,
-                )
-                .slice(0, 3);
-
-              // Find containers for each canvas
-              const containers = [];
-              petAvatarCanvases.forEach((canvas) => {
-                let container = canvas.parentElement;
-                let levelsUp = 0;
-                const maxLevels = 10;
-                const candidates = [];
-
-                while (
-                  container &&
-                  levelsUp < maxLevels &&
-                  container !== targetDocument.body
-                ) {
-                  const hasStats = /STR\s+\d+|INT\s+\d+/.test(
-                    container.textContent,
-                  );
-                  const rect = container.getBoundingClientRect();
-
-                  if (
-                    hasStats &&
-                    rect.width < 200 &&
-                    rect.height < 200 &&
-                    rect.width > 0
-                  ) {
-                    candidates.push({
-                      element: container,
-                      area: rect.width * rect.height,
-                    });
-                  }
-
-                  container = container.parentElement;
-                  levelsUp++;
-                }
-
-                if (candidates.length > 0) {
-                  // Use smallest container (most direct parent)
-                  candidates.sort((a, b) => a.area - b.area);
-                  containers.push(candidates[0].element);
-                }
-              });
-
-              return containers;
-            }
-
-            // Helper to inject button into container
-            function injectButton(container, index) {
-              // Skip if button already exists
-              if (container.querySelector(".mgtools-instant-feed-btn")) {
-                return false;
-              }
-
-              try {
-                // Set container to position: relative
-                const currentPosition =
-                  targetWindow.getComputedStyle(container).position;
-                if (currentPosition === "static") {
-                  container.style.position = "relative";
-                }
-
-                // Create and append button
-                const btn = createInstantFeedButton(index);
-                container.appendChild(btn);
-
-                return true;
-              } catch (err) {
-                console.error(
-                  `[MGTools Feed] Error injecting button ${index + 1}:`,
-                  err,
-                );
-                return false;
-              }
-            }
-
-            // Main polling function - checks and injects buttons if needed
-            function checkAndInjectButtons() {
-              const containers = findVisiblePetContainers();
-
-              if (containers.length === 0) {
-                // No visible pet containers - buttons will be checked again next poll
-                return;
-              }
-
-              // Check if we need to inject any buttons
-              let injectedCount = 0;
-              containers.forEach((container, index) => {
-                const injected = injectButton(container, index);
-                if (injected) injectedCount++;
-              });
-
-              // Log if buttons were re-injected (means they disappeared and came back)
-              if (injectedCount > 0) {
-              }
-            }
-
-            // Initial injection
-            checkAndInjectButtons();
-
-            // Poll every 2000ms (2s) to check if buttons need re-injection
-            // Reduced from 500ms for better performance while maintaining functionality
-            // This handles CSS visibility changes that MutationObserver can't detect
             const pollInterval = setInterval(() => {
               try {
-                // Only check if pet containers are actually visible
-                const petContainers = findVisiblePetContainers();
-                if (petContainers.length > 0) {
-                  checkAndInjectButtons();
+                const overlay = targetDocument.getElementById(FEED_OVERLAY_ID);
+                const buttons = targetDocument.querySelectorAll(
+                  ".mgtools-instant-feed-btn",
+                );
+
+                if (!overlay || buttons.length < 3) {
+                  injectInstantFeedButtons();
                 }
               } catch (err) {
                 console.error("[MGTools Feed] Error in polling:", err);
               }
             }, 2000);
 
-            // Store interval ID for potential cleanup
             if (!targetWindow.MGToolsIntervals) {
               targetWindow.MGToolsIntervals = [];
             }
             targetWindow.MGToolsIntervals.push(pollInterval);
-
-            productionLog(
-              "[MGTools Feed] ✅ Polling active (500ms) - buttons will auto-reappear when containers become visible",
-            );
-            productionLog(
-              "✅ [MGTools] Instant feed buttons initialized with polling detection",
-            );
           };
 
           // Verify data loaded before UI creation

@@ -1,5 +1,13 @@
 # Changelog - MGTools
 
+# Version 2.6.0 (2026-3-22)
+**QOL Additions**:
+- Made it so that all plants are added dynamically so you just have to refresh the page and you will have the new seeds/plants
+- Added Feed Buttons back
+**Bug Fixes:**
+- Fixed a bug where the plant value text would become duplicated
+- Fixed a z-index related bug with feed buttons due to new behavior
+
 # Version 2.5.0 (2026-2-18)
 
 **Bug Fixes:**
