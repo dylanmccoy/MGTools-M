@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MGTools
 // @namespace    http://tampermonkey.net/
-// @version      2.5.1
+// @version      2.6.0
 // @description  All-in-one assistant for Magic Garden with beautiful unified UI (Enhanced Discord Support!) IN MAINTENANCE MODE!
 // @author       Myke247 & Umm12many
 // @updateURL    https://github.com/Umm12many/MGTools-M/raw/refs/heads/main/MGTools.user.js
@@ -140,7 +140,7 @@ async function rcSend(payload, opts = {}) {
  * MGTools - Magic Garden Enhancement Suite
  * A comprehensive userscript for enhancing the Magic Garden gaming experience
  *
- * @version 2.5.1
+ * @version 2.6.0
  * @author Unified Script
  * @license MIT
  */
@@ -306,7 +306,7 @@ console.warn(
 );
 console.log("[MGTOOLS-DEBUG] 1. Script file loaded");
 console.log(
-  "[MGTOOLS-DEBUG] ⚡ VERSION: 2.5.1 - Added new game features + Compatibilty and Bug fixes",
+  "[MGTOOLS-DEBUG] ⚡ VERSION: 2.6.0 - Added dynamic shop info + The feed buttons are back!",
 );
 console.log("[MGTOOLS-DEBUG] 🕐 Load Time:", new Date().toISOString());
 console.log("[MGTOOLS-DEBUG] 2. Location:", window.location.href);
@@ -778,7 +778,7 @@ console.log(
   const CONFIG = {
     // Version Information
     VERSION: {
-      CURRENT: "2.5.1",
+      CURRENT: "2.6.0",
       CHECK_URL_STABLE:
         "https://raw.githubusercontent.com/Umm12many/MGTools-M/main/MGTools.user.js",
       CHECK_URL_BETA:
@@ -13934,7 +13934,6 @@ console.log(
       ];
 
       // 2. The Logic to fill the seeds list
-      console.warn("AAAAAA");
       UnifiedState.plantsDatabase.forEach((plant) => {
         console.warn(plant.rarity);
         // Use plant.rarity as the index for the rarityList
@@ -14116,7 +14115,7 @@ console.log(
       } else if (plant.rarity === NUM_CEL) {
         SHOP_RAINBOW_ITEMS.push(plant.id);
       } else {
-        console.warn(
+        console.error(
           `Plant ${plant.name} has an invalid rarity index: ${plant.rarity}`,
         );
       }
@@ -14142,13 +14141,10 @@ console.log(
 
     UnifiedState.plantsDatabase.forEach((plant) => {
       // Use plant.rarity as the index for the rarityList
-      console.warn("Thingo" + plant);
       if (plant.inShop) {
         SHOP_PRICES[plant.id] = plant.shopPrice;
       }
     });
-
-    console.warn(SHOP_PRICES);
 
     // Format price with k/m/b notation and return color
     function formatShopPrice(price) {
