@@ -1,11 +1,9 @@
 // ==UserScript==
-// @name         MGTools
+// @name         MGTools-TEST
 // @namespace    http://tampermonkey.net/
-// @version      2.6.0
+// @version      2.6.1
 // @description  All-in-one assistant for Magic Garden with beautiful unified UI (Enhanced Discord Support!) IN MAINTENANCE MODE!
-// @author       Myke247 & Umm12many
-// @updateURL    https://github.com/Umm12many/MGTools-M/raw/refs/heads/main/MGTools.user.js
-// @downloadURL  https://github.com/Umm12many/MGTools-M/raw/refs/heads/main/MGTools.user.js
+// @author       Myke247 & Umm12many & dcoy
 // @match        https://magiccircle.gg/r/*
 // @match        https://magicgarden.gg/r/*
 // @match        https://starweaver.org/r/*
@@ -3702,6 +3700,11 @@ console.log(
           debugMode: false, // Enable debug logging for troubleshooting
           roomDebugMode: false, // Enable detailed room API logging for troubleshooting
           hideWeather: false, // Hide weather visual effects (snow, rain, etc)
+          keepAliveAudio: {
+            enabled: false,
+            volume: 0.008,
+            frequency: 72,
+          },
           autoFavorite: {
             enabled: false,
             species: [], // List of species names to auto-favorite
@@ -3710,6 +3713,19 @@ console.log(
           },
           // FIX ISSUE B: Setting to hide/show instant feed buttons
           hideFeedButtons: false, // Default: show feed buttons (current behavior)
+          autoBuy: {
+            enabled: true,
+            categories: {
+              seed: false,
+              egg: false,
+              tool: false,
+            },
+            items: {
+              seed: {},
+              egg: {},
+              tool: {},
+            },
+          },
         },
         hotkeys: {
           enabled: true,
@@ -9541,6 +9557,7 @@ console.log(
         "rooms",
         "protect",
         "tools",
+        "autoBuy",
         "shop",
       ];
 
@@ -9587,6 +9604,7 @@ console.log(
         values: "Values • Alt+V • Shift+Click for widget",
         timers: "Timers • Shift+Click for widget",
         rooms: "Rooms • Shift+Click for widget",
+        autoBuy: "Auto Buy • Alt+O • Shift+Click for widget",
         shop: "Shop • Alt+B",
         tools: "Tools",
         settings: "Settings • Alt+G",
@@ -9615,6 +9633,7 @@ console.log(
             pets: "🐾",
             abilities: "⚡",
             seeds: "🌱",
+            autoBuy: "🛍️",
             values: "💎",
             timers: "⏱️",
             rooms: "🏠",
@@ -10581,6 +10600,10 @@ console.log(
 
       // Generate content based on tab
       switch (tabName) {
+        case "autoBuy":
+          popoutContent.innerHTML = getAutoBuyTabContent();
+          setupAutoBuyTabHandlers(popout);
+          break;
         case "pets":
           popoutContent.innerHTML = getPetsTabContent();
           setupPetsTabHandlers(popout); // Pass popout context
@@ -10975,6 +10998,13 @@ console.log(
           toggleShopWindows();
           return;
         }
+        // Alt+O for Auto Buy tab
+        if (e.altKey && e.key.toLowerCase() === "o") {
+          e.preventDefault();
+          e.stopPropagation();
+          openSidebarTab("autoBuy");
+          return;
+        }
 
         // Check pet preset hotkeys
         for (const [presetName, hotkey] of Object.entries(
@@ -11012,6 +11042,7 @@ console.log(
           openTimers: "timers",
           openRooms: "rooms",
           openShop: "shop",
+          openAutoBuy: "autoBuy",
         };
 
         for (const [action, config] of Object.entries(mgToolsKeys)) {
@@ -11381,6 +11412,8 @@ console.log(
 
     function getContentForTab(tabName, isPopout = false) {
       switch (tabName) {
+        case "autoBuy":
+          return getAutoBuyTabContent();
         case "pets":
           return isPopout ? getPetsPopoutContent() : getPetsTabContent();
         case "abilities":
@@ -11419,6 +11452,9 @@ console.log(
         );
 
         switch (tabName) {
+          case "autoBuy":
+            setupAutoBuyTabHandlers(overlay);
+            break;
           case "abilities":
             setupAbilitiesTabHandlers(overlay);
             if (overlay) {
@@ -13115,6 +13151,10 @@ console.log(
       contentEl.setAttribute("data-active", UnifiedState.activeTab);
 
       switch (UnifiedState.activeTab) {
+        case "autoBuy":
+          contentEl.innerHTML = getAutoBuyTabContent();
+          setupAutoBuyTabHandlers(contentEl);
+          break;
         case "pets": {
           // 🔍 RENDER CYCLE DEBUG: Track pets tab content generation
           productionLog(
@@ -15599,6 +15639,212 @@ console.log(
       savePurchaseTracker();
     }
 
+    function ensureAutoBuySettings() {
+      const settings = UnifiedState.data.settings;
+
+      if (!settings.autoBuy) {
+        settings.autoBuy = {
+          enabled: true,
+          categories: { seed: false, egg: false, tool: false },
+          items: { seed: {}, egg: {}, tool: {} },
+        };
+      }
+
+      settings.autoBuy.categories ||= { seed: false, egg: false, tool: false };
+      settings.autoBuy.items ||= { seed: {}, egg: {}, tool: {} };
+      settings.autoBuy.items.seed ||= {};
+      settings.autoBuy.items.egg ||= {};
+      settings.autoBuy.items.tool ||= {};
+
+      return settings.autoBuy;
+    }
+
+    function getAutoBuyItems() {
+      const seeds = (UnifiedState.plantsDatabase || [])
+        .filter((plant) => plant.inShop)
+        .map((plant) => ({
+          id: plant.id,
+          type: "seed",
+          name: plant.name || SHOP_DISPLAY_NAMES[plant.id] || plant.id,
+        }));
+
+      const eggs = [
+        "CommonEgg",
+        "UncommonEgg",
+        "RareEgg",
+        "SnowEgg",
+        "HorseEgg",
+        "LegendaryEgg",
+        "MythicalEgg",
+      ].map((id) => ({
+        id,
+        type: "egg",
+        name: SHOP_DISPLAY_NAMES[id] || id.replace(/([A-Z])/g, " $1").trim(),
+      }));
+
+      const liveTools = targetWindow?.globalShop?.shops?.tool?.inventory || [];
+      const fallbackTools = [
+        { toolId: "WateringCan" },
+        { toolId: "PlanterPot" },
+        { toolId: "GardenShovel" },
+      ];
+
+      const toolSource = liveTools.length ? liveTools : fallbackTools;
+      const seenTools = new Set();
+
+      const tools = toolSource
+        .map((tool, idx) => {
+          const id = tool.toolId || tool.name || `Tool_${idx}`;
+          return {
+            id,
+            type: "tool",
+            name: SHOP_DISPLAY_NAMES[id] || id.replace(/([A-Z])/g, " $1").trim(),
+          };
+        })
+        .filter((tool) => {
+          if (seenTools.has(tool.id)) return false;
+          seenTools.add(tool.id);
+          return true;
+        });
+
+      return { seed: seeds, egg: eggs, tool: tools };
+    }
+
+    function getAutoBuyTabContent() {
+      const autoBuy = ensureAutoBuySettings();
+      const items = getAutoBuyItems();
+
+      const renderCategory = (type, title, emoji) => {
+        const enabled = !!autoBuy.categories[type];
+
+        return `
+          <div class="mga-section" style="padding: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;">
+            <label class="mga-checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 10px;">
+              <input type="checkbox" class="mga-checkbox autobuy-category-toggle" data-type="${type}" ${enabled ? "checked" : ""} style="accent-color: #4a9eff;">
+              <span style="font-weight: 700;">${emoji} Auto-buy ${title}</span>
+            </label>
+
+            <div style="display: grid; gap: 6px; margin-left: 22px;">
+              ${items[type]
+                .map((item) => {
+                  const checked = !!autoBuy.items[type][item.id];
+                  const stock = getItemStock(item.id, type);
+                  return `
+                    <label class="mga-checkbox-label" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; padding: 6px 8px; background: rgba(255,255,255,0.03); border-radius: 6px;">
+                      <span style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" class="mga-checkbox autobuy-item-toggle" data-type="${type}" data-id="${item.id}" ${checked ? "checked" : ""} style="accent-color: #4a9eff;">
+                        <span>${item.name}</span>
+                      </span>
+                      <span style="font-size: 11px; color: ${stock > 0 ? "#4ade80" : "#888"};">Stock: ${stock}</span>
+                    </label>
+                  `;
+                })
+                .join("")}
+            </div>
+          </div>
+        `;
+      };
+
+      return `
+        <div class="mga-section">
+          <div class="mga-section-title">🛍️ Auto Buy</div>
+          <p style="font-size: 12px; color: #aaa; margin-bottom: 12px;">
+            Uses the existing shop purchase logic. A category must be enabled, and each item must also be checked.
+          </p>
+
+          <div style="display: grid; gap: 12px;">
+            ${renderCategory("seed", "Seeds", "🌱")}
+            ${renderCategory("egg", "Eggs", "🥚")}
+            ${renderCategory("tool", "Tools", "🔧")}
+          </div>
+        </div>
+      `;
+    }
+
+    function setupAutoBuyTabHandlers(context = document) {
+      ensureAutoBuySettings();
+
+      context.querySelectorAll(".autobuy-category-toggle").forEach((checkbox) => {
+        checkbox.addEventListener("change", () => {
+          const type = checkbox.dataset.type;
+          UnifiedState.data.settings.autoBuy.categories[type] = checkbox.checked;
+          MGA_saveJSON("MGA_data", UnifiedState.data);
+        });
+      });
+
+      context.querySelectorAll(".autobuy-item-toggle").forEach((checkbox) => {
+        checkbox.addEventListener("change", () => {
+          const type = checkbox.dataset.type;
+          const id = checkbox.dataset.id;
+          UnifiedState.data.settings.autoBuy.items[type][id] = checkbox.checked;
+          MGA_saveJSON("MGA_data", UnifiedState.data);
+        });
+      });
+    }
+      const autoBuyQueue = [];
+      const autoBuyQueuedKeys = new Set();
+      let autoBuyQueueRunning = false;
+
+      function queueAutoBuy(id, type, amount = 1) {
+          const key = `${type}:${id}`;
+
+          if (autoBuyQueuedKeys.has(key)) return;
+
+          autoBuyQueuedKeys.add(key);
+          autoBuyQueue.push({ id, type, amount, key });
+
+          processAutoBuyQueue();
+      }
+
+      function processAutoBuyQueue() {
+          if (autoBuyQueueRunning) return;
+
+          autoBuyQueueRunning = true;
+
+          const interval = setInterval(() => {
+              const next = autoBuyQueue.shift();
+
+              if (!next) {
+                  clearInterval(interval);
+                  autoBuyQueueRunning = false;
+                  return;
+              }
+
+              const fakeEl = targetDocument.createElement("div");
+              buyItem(next.id, next.type, next.amount, fakeEl);
+
+              autoBuyQueuedKeys.delete(next.key);
+
+          }, 250);
+      }
+
+    function runAutoBuyOnce() {
+      const autoBuy = ensureAutoBuySettings();
+      if (!autoBuy.enabled) return;
+
+      const items = getAutoBuyItems();
+
+      ["seed", "egg", "tool"].forEach((type) => {
+        if (!autoBuy.categories[type]) return;
+
+        items[type].forEach((item) => {
+          if (!autoBuy.items[type][item.id]) return;
+
+          const stock = getItemStock(item.id, type);
+          if (stock <= 0) return;
+          console.log("autobuying " + item.id);
+
+          queueAutoBuy(item.id, type, stock);
+        });
+      });
+    }
+
+    function startAutoBuyLoop() {
+      setManagedInterval("autoBuy", runAutoBuyOnce, 2500);
+    }
+
+    startAutoBuyLoop();
+
     // ==================== SHOP TAB (DEPRECATED - USING DUAL WINDOWS NOW) ====================
     function getShopTabContent() {
       const settings = UnifiedState.data.settings;
@@ -16734,6 +16980,105 @@ console.log(
         sharedAudioContext.resume();
       }
       return sharedAudioContext;
+    }
+
+    let keepAliveAudioNodes = null;
+
+    function getKeepAliveAudioSettings() {
+      const settings = UnifiedState?.data?.settings || {};
+      if (!settings.keepAliveAudio) {
+        settings.keepAliveAudio = {
+          enabled: false,
+          volume: 0.008,
+          frequency: 72,
+        };
+      }
+      if (settings.keepAliveAudio.volume === undefined) {
+        settings.keepAliveAudio.volume = 0.008;
+      }
+      if (settings.keepAliveAudio.frequency === undefined) {
+        settings.keepAliveAudio.frequency = 72;
+      }
+      return settings.keepAliveAudio;
+    }
+
+    function startKeepAliveAudio() {
+      try {
+        if (keepAliveAudioNodes) return true;
+
+        const settings = getKeepAliveAudioSettings();
+        const audioContext = getAudioContext();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        const lfo = audioContext.createOscillator();
+        const lfoGain = audioContext.createGain();
+
+        oscillator.type = "sine";
+        oscillator.frequency.value = settings.frequency || 72;
+
+        lfo.type = "sine";
+        lfo.frequency.value = 0.07;
+        lfoGain.gain.value = 8;
+
+        const volume = Math.max(
+          0,
+          Math.min(Number(settings.volume ?? 0.008), 0.03),
+        );
+        gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+
+        lfo.connect(lfoGain);
+        lfoGain.connect(oscillator.frequency);
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.start();
+        lfo.start();
+
+        keepAliveAudioNodes = {
+          audioContext,
+          oscillator,
+          gainNode,
+          lfo,
+          lfoGain,
+        };
+
+        productionLog("🔊 [KEEP-ALIVE] Barely audible audio loop started");
+        return true;
+      } catch (error) {
+        productionWarn("⚠️ [KEEP-ALIVE] Unable to start audio loop", error);
+        return false;
+      }
+    }
+
+    function stopKeepAliveAudio() {
+      if (!keepAliveAudioNodes) return;
+
+      try {
+        const { audioContext, oscillator, gainNode, lfo } = keepAliveAudioNodes;
+        gainNode.gain.setTargetAtTime(0, audioContext.currentTime, 0.08);
+        oscillator.stop(audioContext.currentTime + 0.2);
+        lfo.stop(audioContext.currentTime + 0.2);
+      } catch (_) {
+        // Nodes may already be stopped or disconnected.
+      }
+
+      keepAliveAudioNodes = null;
+      productionLog("🔇 [KEEP-ALIVE] Audio loop stopped");
+    }
+
+    function syncKeepAliveAudio() {
+      const settings = getKeepAliveAudioSettings();
+      if (settings.enabled) {
+        startKeepAliveAudio();
+      } else {
+        stopKeepAliveAudio();
+      }
+    }
+
+    if (typeof window !== "undefined") {
+      window.MGTools_startKeepAliveAudio = startKeepAliveAudio;
+      window.MGTools_stopKeepAliveAudio = stopKeepAliveAudio;
+      window.MGTools_syncKeepAliveAudio = syncKeepAliveAudio;
     }
 
     // Play notification sound using Web Audio API
@@ -19762,6 +20107,21 @@ console.log(
                       </label>
                       <p style="font-size: 11px; color: #aaa; margin: 4px 0 0 26px;">
                           When enabled, tabs will open as draggable overlays within the game window instead of separate browser windows.
+                      </p>
+                  </div>
+              </div>
+
+              <div class="mga-section">
+                  <div class="mga-section-title">Keep Alive</div>
+                  <div style="margin-bottom: 12px;">
+                      <label class="mga-checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                          <input type="checkbox" id="keep-alive-audio-checkbox" class="mga-checkbox"
+                                 ${settings.keepAliveAudio?.enabled ? "checked" : ""}
+                                 style="accent-color: #4a9eff;">
+                          <span>Enable barely audible audio loop</span>
+                      </label>
+                      <p style="font-size: 11px; color: #aaa; margin: 4px 0 0 26px;">
+                          Plays a very quiet oscillating tone to help keep the browser window active. Browser audio rules may require toggling it after a click.
                       </p>
                   </div>
               </div>
@@ -25595,6 +25955,34 @@ console.log(
           MGA_saveJSON("MGA_data", UnifiedState.data);
           productionLog(
             `🎮 Overlay mode ${e.target.checked ? "enabled" : "disabled"}`,
+          );
+        });
+      }
+
+      const keepAliveAudioCheckbox = context.querySelector(
+        "#keep-alive-audio-checkbox",
+      );
+      if (keepAliveAudioCheckbox) {
+        keepAliveAudioCheckbox.addEventListener("change", (e) => {
+          if (!UnifiedState.data.settings.keepAliveAudio) {
+            UnifiedState.data.settings.keepAliveAudio = {
+              enabled: false,
+              volume: 0.008,
+              frequency: 72,
+            };
+          }
+
+          UnifiedState.data.settings.keepAliveAudio.enabled = e.target.checked;
+          MGA_saveJSON("MGA_data", UnifiedState.data);
+
+          if (typeof syncKeepAliveAudio === "function") {
+            syncKeepAliveAudio();
+          } else if (typeof window.MGTools_syncKeepAliveAudio === "function") {
+            window.MGTools_syncKeepAliveAudio();
+          }
+
+          productionLog(
+            `[KEEP-ALIVE] Audio loop ${e.target.checked ? "enabled" : "disabled"}`,
           );
         });
       }
@@ -32303,6 +32691,11 @@ console.log(
             useInGameOverlays: true,
             debugMode: false,
             hideWeather: false,
+            keepAliveAudio: {
+              enabled: false,
+              volume: 0.008,
+              frequency: 72,
+            },
             notifications: {
               enabled: true,
               volume: 0.3,
@@ -32355,6 +32748,24 @@ console.log(
       // Ensure notifications object exists and has all required fields
       if (!UnifiedState.data.settings.notifications) {
         UnifiedState.data.settings.notifications = {};
+      }
+
+      if (!UnifiedState.data.settings.keepAliveAudio) {
+        UnifiedState.data.settings.keepAliveAudio = {
+          enabled: false,
+          volume: 0.008,
+          frequency: 72,
+        };
+      } else {
+        if (UnifiedState.data.settings.keepAliveAudio.enabled === undefined) {
+          UnifiedState.data.settings.keepAliveAudio.enabled = false;
+        }
+        if (UnifiedState.data.settings.keepAliveAudio.volume === undefined) {
+          UnifiedState.data.settings.keepAliveAudio.volume = 0.008;
+        }
+        if (UnifiedState.data.settings.keepAliveAudio.frequency === undefined) {
+          UnifiedState.data.settings.keepAliveAudio.frequency = 72;
+        }
       }
 
       // Set defaults for any missing notification fields
@@ -34473,6 +34884,9 @@ console.log(
           // Load saved data
           productionLog("💾 Loading saved data...");
           loadSavedData();
+          if (typeof syncKeepAliveAudio === "function") {
+            syncKeepAliveAudio();
+          }
 
           // Room polling handled by anonymous IIFE system (lines 28200-28365)
           // This system already polls all rooms including Discord rooms
